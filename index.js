@@ -21,7 +21,16 @@ const API_KEY = "live_ABTVOH3lPLJQGxbq4zsnYDE9f8KqedHWpaXXMTI8dYV3FpEQMWDMhXCBNl
  *  - Each option should display text equal to the name of the breed.
  * This function should execute immediately.
  */
-
+(async function initialLoad(){
+    const breeds = await fetch('https://api.thecatapi.com/v1/breeds');
+    const breedsArray = await breeds.json();
+    breedsArray.forEach(breed => {
+        const option = document.createElement('option');
+        option.setAttribute('value', breed.id);
+        option.textContent = breed.name
+        breedSelect.appendChild(option);
+    })
+})();
 
 /**
  * 2. Create an event handler for breedSelect that does the following:
