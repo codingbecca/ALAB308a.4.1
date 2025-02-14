@@ -36,6 +36,11 @@ body {
   right: 12px;
 }
 
+.carousel-item img {
+  background-color: lightgray;
+  height: 300px;
+  object-fit: contain;
+}
 .carousel-inner {
   padding: 1em;
 }
