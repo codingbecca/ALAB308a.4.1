@@ -14,6 +14,7 @@ const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 const API_KEY =
   "live_ABTVOH3lPLJQGxbq4zsnYDE9f8KqedHWpaXXMTI8dYV3FpEQMWDMhXCBNlyYLLUE";
 
+axios.defaults.headers.common["x-api-key"] = API_KEY;
 /**
  * 1. Create an async function "initialLoad" that does the following:
  * - Retrieve a list of breeds from the cat API using fetch().
@@ -26,8 +27,8 @@ let breedsList = [];
 
 (async function initialLoad() {
   try {
-    const breeds = await fetch("https://api.thecatapi.com/v1/breeds");
-    breedsList = await breeds.json();
+    const response = await axios("https://api.thecatapi.com/v1/breeds");
+    breedsList = response.data
     breedsList.forEach((breed) => {
       const option = document.createElement("option");
       option.setAttribute("value", breed.id);
@@ -61,15 +62,10 @@ async function handleBreedSelect(e) {
   try {
     const breed = breedsList.filter((breed) => breedId === breed.id)[0];
     Carousel.clear();
-    const data = await fetch(
-        `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`,
-        {
-            headers: {
-                "x-api-key": API_KEY,
-            },
-        }
+    const response = await axios(
+        `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`
     );
-    const dataArray = await data.json();
+    const dataArray = response.data;
     dataArray.forEach((img) => {
         const carouselItem = Carousel.createCarouselItem(
             img.url,
