@@ -103,6 +103,23 @@ async function handleBreedSelect(e) {
  * - Add a console.log statement to indicate when requests begin.
  * - As an added challenge, try to do this on your own without referencing the lesson material.
  */
+axios.interceptors.request.use((request)=> {
+    request.metadata = request.metadata || {};
+    request.metadata.startTime = new Date().getTime();
+    console.log("request began at: ", request.metadata.startTime)
+    return request;
+})
+
+axios.interceptors.response.use((response) => {
+    response.config.metadata.endTime = new Date().getTime();
+    response.config.metadata.requestTimeMS = response.config.metadata.endTime - response.config.metadata.startTime;
+    console.log('Request took:', response.config.metadata.requestTimeMS + "ms");
+    return response
+}, (error) => {
+    error.config.metadata.endTime = new Date().getTime();
+    error.durationInMS = error.config.metadata.endTime - error.config.metadata.startTime;
+    throw error;
+});
 
 /**
  * 6. Next, we'll create a progress bar to indicate the request is in progress.
