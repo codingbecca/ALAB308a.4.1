@@ -63,7 +63,9 @@ async function handleBreedSelect(e) {
     const breed = breedsList.filter((breed) => breedId === breed.id)[0];
     Carousel.clear();
     const response = await axios(
-        `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`
+        `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`, {
+            onDownloadProgress: updateProgress,
+        }
     );
     const dataArray = response.data;
     dataArray.forEach((img) => {
@@ -107,6 +109,8 @@ axios.interceptors.request.use((request)=> {
     request.metadata = request.metadata || {};
     request.metadata.startTime = new Date().getTime();
     console.log("request began at: ", request.metadata.startTime)
+    progressBar.style.width = "0%"
+    document.body.style.cursor = 'progress';
     return request;
 })
 
@@ -114,6 +118,7 @@ axios.interceptors.response.use((response) => {
     response.config.metadata.endTime = new Date().getTime();
     response.config.metadata.requestTimeMS = response.config.metadata.endTime - response.config.metadata.startTime;
     console.log('Request took:', response.config.metadata.requestTimeMS + "ms");
+    document.body.style.cursor = 'auto';
     return response
 }, (error) => {
     error.config.metadata.endTime = new Date().getTime();
@@ -130,12 +135,18 @@ axios.interceptors.response.use((response) => {
  * - Research the axios onDownloadProgress config option.
  * - Create a function "updateProgress" that receives a ProgressEvent object.
  *  - Pass this function to the axios onDownloadProgress config option in your event handler.
- * - console.log your ProgressEvent object within updateProgess, and familiarize yourself with its structure.
+ * - console.log your ProgressEvent object within updateProgress, and familiarize yourself with its structure.
  *  - Update the progress of the request using the properties you are given.
  * - Note that we are not downloading a lot of data, so onDownloadProgress will likely only fire
  *   once or twice per request to this API. This is still a concept worth familiarizing yourself
  *   with for future projects.
  */
+function updateProgress(ProgressEvent){
+ console.log(ProgressEvent);
+ const percentCompleted = Math.round((ProgressEvent.loaded*100)/ProgressEvent.total);
+ progressBar.style.width = `${percentCompleted}%`;
+}
+
 
 /**
  * 7. As a final element of progress indication, add the following to your axios interceptors:
