@@ -61,7 +61,6 @@ async function handleBreedSelect(e) {
   const breedId = e.target.value;
   try {
     const breed = breedsList.filter((breed) => breedId === breed.id)[0];
-    Carousel.clear();
     const response = await axios(
       `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`,
       {
@@ -69,15 +68,7 @@ async function handleBreedSelect(e) {
       }
     );
     const dataArray = response.data;
-    dataArray.forEach((img) => {
-      const carouselItem = Carousel.createCarouselItem(
-        img.url,
-        `Image of a ${breed.name} cat`,
-        img.id
-      );
-      Carousel.appendCarousel(carouselItem);
-    });
-    Carousel.start();
+    buildCarousel(dataArray);
 
     // add the breed description to a new p tag inside infoDump. infoDump.innerHTML must be cleared each time the event is fired
     infoDump.innerHTML = "";
@@ -176,13 +167,16 @@ export async function favourite(imgId) {
   try {
       const response = await axios("https://api.thecatapi.com/v1/favourites");
       const favorites = response.data;
-      const found = favorites.includes((favorite) => favorite.image_id === imgId);
+
+      // check to see if the favorite exists
+      const found = favorites.find((favorite) => favorite.image_id === imgId);
       if (!found) {
-        await axios.post("https://api.thecatapi.com/v1/favourites", {
+       const response =  await axios.post("https://api.thecatapi.com/v1/favourites", {
           image_id: imgId,
         });
+        console.log(response.data);
       } else {
-        await axios.delete(`https://api.thecatapi.com/v1/favourites/${imgId}`);
+        await axios.delete(`https://api.thecatapi.com/v1/favourites/${found.id}`);
       }
   } catch (error) {
     console.error(error)
@@ -198,6 +192,23 @@ export async function favourite(imgId) {
  *    If that isn't in its own function, maybe it should be so you don't have to
  *    repeat yourself in this section.
  */
+getFavouritesBtn.addEventListener('click', getFavourites);
+
+async function getFavourites() {
+    try {
+        infoDump.innerHTML = "";
+        const favoriteImgs = [];
+        const response = await axios('https://api.thecatapi.com/v1/favourites');
+        const favoritesArray = response.data;
+    
+        favoritesArray.forEach(favorite => {
+            favoriteImgs.push(favorite.image)
+        })
+        buildCarousel(favoriteImgs);
+    } catch (error) {
+        console.error(error)
+    } 
+}
 
 /**
  * 10. Test your site, thoroughly!
@@ -206,3 +217,18 @@ export async function favourite(imgId) {
  * - Test other breeds as well. Not every breed has the same data available, so
  *   your code should account for this.
  */
+
+
+//helper function that takes in an array of images with the properties url and id and builds a carousel
+function buildCarousel(imgArray) {
+    Carousel.clear();
+    imgArray.forEach((img) => {
+        const carouselItem = Carousel.createCarouselItem(
+          img.url,
+          `Image of a cat`,
+          img.id
+        );
+        Carousel.appendCarousel(carouselItem);
+      });
+      Carousel.start();
+}
