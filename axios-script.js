@@ -28,7 +28,7 @@ let breedsList = [];
 (async function initialLoad() {
   try {
     const response = await axios("https://api.thecatapi.com/v1/breeds");
-    breedsList = response.data
+    breedsList = response.data;
     breedsList.forEach((breed) => {
       const option = document.createElement("option");
       option.setAttribute("value", breed.id);
@@ -63,18 +63,19 @@ async function handleBreedSelect(e) {
     const breed = breedsList.filter((breed) => breedId === breed.id)[0];
     Carousel.clear();
     const response = await axios(
-        `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`, {
-            onDownloadProgress: updateProgress,
-        }
+      `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`,
+      {
+        onDownloadProgress: updateProgress,
+      }
     );
     const dataArray = response.data;
     dataArray.forEach((img) => {
-        const carouselItem = Carousel.createCarouselItem(
-            img.url,
-            `Image of a ${breed.name} cat`,
-            img.id
-        );
-        Carousel.appendCarousel(carouselItem);
+      const carouselItem = Carousel.createCarouselItem(
+        img.url,
+        `Image of a ${breed.name} cat`,
+        img.id
+      );
+      Carousel.appendCarousel(carouselItem);
     });
     Carousel.start();
 
@@ -105,26 +106,31 @@ async function handleBreedSelect(e) {
  * - Add a console.log statement to indicate when requests begin.
  * - As an added challenge, try to do this on your own without referencing the lesson material.
  */
-axios.interceptors.request.use((request)=> {
-    request.metadata = request.metadata || {};
-    request.metadata.startTime = new Date().getTime();
-    console.log("request began at: ", request.metadata.startTime)
-    progressBar.style.width = "0%"
-    document.body.style.cursor = 'progress';
-    return request;
-})
-
-axios.interceptors.response.use((response) => {
-    response.config.metadata.endTime = new Date().getTime();
-    response.config.metadata.requestTimeMS = response.config.metadata.endTime - response.config.metadata.startTime;
-    console.log('Request took:', response.config.metadata.requestTimeMS + "ms");
-    document.body.style.cursor = 'auto';
-    return response
-}, (error) => {
-    error.config.metadata.endTime = new Date().getTime();
-    error.durationInMS = error.config.metadata.endTime - error.config.metadata.startTime;
-    throw error;
+axios.interceptors.request.use((request) => {
+  request.metadata = request.metadata || {};
+  request.metadata.startTime = new Date().getTime();
+  console.log("request began at: ", request.metadata.startTime);
+  progressBar.style.width = "0%";
+  document.body.style.cursor = "progress";
+  return request;
 });
+
+axios.interceptors.response.use(
+  (response) => {
+    response.config.metadata.endTime = new Date().getTime();
+    response.config.metadata.requestTimeMS =
+      response.config.metadata.endTime - response.config.metadata.startTime;
+    console.log("Request took:", response.config.metadata.requestTimeMS + "ms");
+    document.body.style.cursor = "auto";
+    return response;
+  },
+  (error) => {
+    error.config.metadata.endTime = new Date().getTime();
+    error.durationInMS =
+      error.config.metadata.endTime - error.config.metadata.startTime;
+    throw error;
+  }
+);
 
 /**
  * 6. Next, we'll create a progress bar to indicate the request is in progress.
@@ -141,12 +147,13 @@ axios.interceptors.response.use((response) => {
  *   once or twice per request to this API. This is still a concept worth familiarizing yourself
  *   with for future projects.
  */
-function updateProgress(ProgressEvent){
- console.log(ProgressEvent);
- const percentCompleted = Math.round((ProgressEvent.loaded*100)/ProgressEvent.total);
- progressBar.style.width = `${percentCompleted}%`;
+function updateProgress(ProgressEvent) {
+  console.log(ProgressEvent);
+  const percentCompleted = Math.round(
+    (ProgressEvent.loaded * 100) / ProgressEvent.total
+  );
+  progressBar.style.width = `${percentCompleted}%`;
 }
-
 
 /**
  * 7. As a final element of progress indication, add the following to your axios interceptors:
@@ -166,6 +173,20 @@ function updateProgress(ProgressEvent){
  */
 export async function favourite(imgId) {
   // your code here
+  try {
+      const response = await axios("https://api.thecatapi.com/v1/favourites");
+      const favorites = response.data;
+      const found = favorites.includes((favorite) => favorite.image_id === imgId);
+      if (!found) {
+        await axios.post("https://api.thecatapi.com/v1/favourites", {
+          image_id: imgId,
+        });
+      } else {
+        await axios.delete(`https://api.thecatapi.com/v1/favourites/${imgId}`);
+      }
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 /**
