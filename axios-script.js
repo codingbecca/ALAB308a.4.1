@@ -29,7 +29,10 @@ let breedsList = [];
   try {
     const response = await axios("https://api.thecatapi.com/v1/breeds");
     breedsList = response.data;
-    breedsList.forEach((breed) => {
+    const breedsListWPics = breedsList.filter(
+      (breed) => !!breed.reference_image_id
+    );
+    breedsListWPics.forEach((breed) => {
       const option = document.createElement("option");
       option.setAttribute("value", breed.id);
       option.textContent = breed.name;
@@ -62,13 +65,15 @@ async function handleBreedSelect(e) {
   try {
     const breed = breedsList.filter((breed) => breedId === breed.id)[0];
     const response = await axios(
-      `https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=${breedId}`,
+      `https://api.thecatapi.com/v1/images/search?limit=100&breed_ids=${breedId}`,
       {
         onDownloadProgress: updateProgress,
       }
     );
     const dataArray = response.data;
-    buildCarousel(dataArray);
+    if (dataArray) {
+      buildCarousel(dataArray);
+    }
 
     // add the breed description to a new p tag inside infoDump. infoDump.innerHTML must be cleared each time the event is fired
     infoDump.innerHTML = "";
@@ -165,21 +170,24 @@ function updateProgress(ProgressEvent) {
 export async function favourite(imgId) {
   // your code here
   try {
-      const response = await axios("https://api.thecatapi.com/v1/favourites");
-      const favorites = response.data;
+    const response = await axios("https://api.thecatapi.com/v1/favourites");
+    const favorites = response.data;
 
-      // check to see if the favorite exists
-      const found = favorites.find((favorite) => favorite.image_id === imgId);
-      if (!found) {
-       const response =  await axios.post("https://api.thecatapi.com/v1/favourites", {
+    // check to see if the favorite exists
+    const found = favorites.find((favorite) => favorite.image_id === imgId);
+    if (!found) {
+      const response = await axios.post(
+        "https://api.thecatapi.com/v1/favourites",
+        {
           image_id: imgId,
-        });
-        console.log(response.data);
-      } else {
-        await axios.delete(`https://api.thecatapi.com/v1/favourites/${found.id}`);
-      }
+        }
+      );
+      console.log(response.data);
+    } else {
+      await axios.delete(`https://api.thecatapi.com/v1/favourites/${found.id}`);
+    }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 }
 
@@ -192,43 +200,44 @@ export async function favourite(imgId) {
  *    If that isn't in its own function, maybe it should be so you don't have to
  *    repeat yourself in this section.
  */
-getFavouritesBtn.addEventListener('click', getFavourites);
+getFavouritesBtn.addEventListener("click", getFavourites);
 
 async function getFavourites() {
-    try {
-        infoDump.innerHTML = "";
-        const favoriteImgs = [];
-        const response = await axios('https://api.thecatapi.com/v1/favourites');
-        const favoritesArray = response.data;
-    
-        favoritesArray.forEach(favorite => {
-            favoriteImgs.push(favorite.image)
-        })
-        buildCarousel(favoriteImgs);
-    } catch (error) {
-        console.error(error)
-    } 
+  try {
+    infoDump.innerHTML = "";
+    const favoriteImgs = [];
+    const response = await axios("https://api.thecatapi.com/v1/favourites");
+    const favoritesArray = response.data;
+
+    favoritesArray.forEach((favorite) => {
+      favoriteImgs.push(favorite.image);
+    });
+    buildCarousel(favoriteImgs);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 /**
  * 10. Test your site, thoroughly!
  * - What happens when you try to load the Malayan breed?
  *  - If this is working, good job! If not, look for the reason why and fix it!
+ *? the reason is that there aren't any photos for the Malayan breed. It looks like there are 2 breeds that don't have the property reference_image_id, which means there aren't any photos available for the breed
+ *? I chose to solve this by only displaying the breeds that have a reference_image_id property and hiding the others from the options list
  * - Test other breeds as well. Not every breed has the same data available, so
  *   your code should account for this.
  */
 
-
 //helper function that takes in an array of images with the properties url and id and builds a carousel
 function buildCarousel(imgArray) {
-    Carousel.clear();
-    imgArray.forEach((img) => {
-        const carouselItem = Carousel.createCarouselItem(
-          img.url,
-          `Image of a cat`,
-          img.id
-        );
-        Carousel.appendCarousel(carouselItem);
-      });
-      Carousel.start();
+  Carousel.clear();
+  imgArray.forEach((img) => {
+    const carouselItem = Carousel.createCarouselItem(
+      img.url,
+      "Image of a cat",
+      img.id
+    );
+    Carousel.appendCarousel(carouselItem);
+  });
+  Carousel.start();
 }
